@@ -22,7 +22,6 @@ function renderTemplatesGrid() {
       <div class="template-body">${TEMPLATES[t.key]}</div>
       <div class="template-actions">
         <button class="template-btn use" onclick="useTemplate('${t.key}', event)">Use</button>
-        <button class="template-btn edit" onclick="showToast('Template editor coming soon!','info')">Edit</button>
       </div>
     </div>
   `).join('');

@@ -62,6 +62,84 @@ input, select, textarea { font-family: inherit; }
 .avatar-name { display: block; font-size: .85rem; font-weight: 600; line-height: 1.2; }
 .avatar-role { display: block; font-size: .72rem; color: var(--text-muted); }
 
+/* NOTIFICATION DROPDOWN */
+.notif-dropdown {
+  position: absolute; top: calc(var(--navbar-h) - 5px); right: 24px;
+  width: 340px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); z-index: 101;
+  display: none; flex-direction: column; overflow: hidden;
+  animation: slideDown .2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.notif-dropdown.show { display: flex; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-10px) scale(0.98)} to{opacity:1;transform:none} }
+.notif-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center; background: var(--surface);
+}
+.notif-header h3 { font-size: 1rem; font-weight: 700; }
+.notif-header span { font-size: .75rem; color: var(--blue); cursor: pointer; font-weight: 600; }
+.notif-body { max-height: 320px; overflow-y: auto; background: var(--surface); }
+.notif-item {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; gap: 14px; transition: var(--transition);
+  cursor: pointer;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: var(--bg); }
+.notif-item.unread { background: var(--blue-light); }
+.notif-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.notif-icon.blue { background: var(--blue); color: #fff; }
+.notif-icon.green { background: var(--green); color: #fff; }
+.notif-icon.purple { background: var(--purple); color: #fff; }
+.notif-content h4 { font-size: .85rem; font-weight: 600; margin-bottom: 4px; color: var(--text); }
+.notif-content p { font-size: .8rem; color: var(--text-muted); line-height: 1.4; }
+.notif-time { font-size: .7rem; color: var(--text-light); margin-top: 6px; display: block; font-weight: 500; }
+.notif-footer { padding: 12px; text-align: center; border-top: 1px solid var(--border); background: var(--bg); }
+.notif-footer a { font-size: .8rem; font-weight: 600; color: var(--text-muted); }
+.notif-footer a:hover { color: var(--text); }
+
+/* PROFILE DROPDOWN */
+.nav-avatar { cursor: pointer; display: flex; align-items: center; gap: 10px; position: relative; padding: 4px 8px; border-radius: 10px; transition: var(--transition); }
+.nav-avatar:hover { background: var(--bg); }
+.profile-dropdown {
+  position: absolute; top: calc(var(--navbar-h) - 5px); right: 24px;
+  width: 240px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); z-index: 101;
+  display: none; flex-direction: column; overflow: hidden;
+  animation: slideDown .2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.profile-dropdown.show { display: flex; }
+.profile-dropdown-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px; background: linear-gradient(135deg, var(--green-light), #f0fdf4);
+  border-bottom: 1px solid var(--border);
+}
+.profile-role-badge {
+  display: inline-block; margin-top: 4px;
+  font-size: .65rem; font-weight: 700; padding: 2px 7px;
+  background: var(--green-light); color: var(--green-dark);
+  border-radius: 20px; border: 1px solid var(--green);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.profile-dropdown-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 16px; font-size: .875rem; font-weight: 500;
+  color: var(--text); cursor: pointer; transition: var(--transition);
+  border: none; background: none; width: 100%; text-align: left;
+}
+.profile-dropdown-item:hover { background: var(--bg); color: var(--green-dark); }
+.profile-dropdown-item svg { flex-shrink: 0; color: var(--text-muted); }
+.profile-dropdown-item:hover svg { color: var(--green-dark); }
+.profile-dropdown-divider { height: 1px; background: var(--border); margin: 2px 0; }
+.profile-logout { color: var(--red) !important; }
+.profile-logout svg { color: var(--red) !important; }
+.profile-logout:hover { background: var(--red-light) !important; color: var(--red) !important; }
+
 /* ─── LAYOUT ─── */
 .layout { display: flex; padding-top: var(--navbar-h); min-height: 100vh; }
 

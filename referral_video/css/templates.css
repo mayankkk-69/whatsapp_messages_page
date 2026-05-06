@@ -24,4 +24,3 @@
 }
 .template-btn.use { background:var(--green); color:#fff; border-color:var(--green); }
 .template-btn.use:hover { background:var(--green-dark); }
-.template-btn.edit:hover { border-color:var(--blue); color:var(--blue); background:var(--blue-light); }

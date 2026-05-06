@@ -13,12 +13,89 @@ const STATUS_TICK = {
 let sentCount = 0, deliveredCount = 0, repliesCount = 0;
 let simulationTimer = null;
 
-function initCampaigns() {
+async function initCampaigns() {
   renderClientList();
-  renderTableSkeleton();
+  renderTableSkeleton(); // Initial skeleton
   bindCampaignEvents();
   initTableFilters();
   prefillCampaignDateTime();
+  await fetchLatestCampaignStats(); // Load real DB data
+}
+
+async function fetchLatestCampaignStats() {
+  try {
+    const response = await fetch('api/get_latest_campaign.php');
+    const data = await response.json();
+
+    // 1. Update Global Stats (Always available)
+    const svTotal = document.getElementById('sv-total');
+    if (svTotal) svTotal.textContent = data.global_total_clients || 0;
+
+    // 2. Update Activity Feed (Always available)
+    const activityList = document.getElementById('activity-list');
+    if (activityList && data.activities) {
+      if (data.activities.length === 0) {
+        activityList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted)">No activity yet.</div>';
+      } else {
+        activityList.innerHTML = data.activities.map(act => {
+          const icon = act.type === 'Campaign Started' ? '🚀' : (act.type === 'Form Input' ? '✍' : '👁');
+          const parsedData = JSON.parse(act.data || '{}');
+          const text = act.type === 'Form Input' 
+            ? `Editing field <strong>${act.field || 'unknown'}</strong> for ${parsedData.name || 'Untitled'}`
+            : `${act.type}: <strong>${parsedData.name || ''}</strong>`;
+            
+          return `
+            <div class="activity-item">
+              <span class="activity-icon">${icon}</span>
+              <span class="activity-text">${text}</span>
+              <span class="activity-time">${act.time}</span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // 3. Stop here if no campaign data
+    if (data.no_campaign) return;
+
+    // 4. Update Campaign Stats
+    const svSent = document.getElementById('sv-sent');
+    const svDelivered = document.getElementById('sv-delivered');
+    const svReplies = document.getElementById('sv-replies');
+    const drate = document.getElementById('delivery-rate');
+    const rrate = document.getElementById('reply-rate');
+
+    if (svSent) svSent.textContent = data.total_sent || 0;
+    if (svDelivered) svDelivered.textContent = data.delivered || 0;
+    if (svReplies) svReplies.textContent = data.replies || 0;
+    
+    if (data.total_sent > 0) {
+      if (drate) drate.textContent = Math.round((data.delivered / data.total_sent) * 100) + '% rate';
+      if (rrate) rrate.textContent = Math.round((data.replies / data.total_sent) * 100) + '% response';
+    }
+
+    // 5. Update Table
+    const tbody = document.getElementById('delivery-tbody');
+    if (tbody && data.deliveries) {
+      tbody.innerHTML = data.deliveries.map(d => `
+        <tr data-id="${d.client_id}" data-status="${d.status.toLowerCase()}">
+          <td><div class="client-cell">
+            <div class="client-initials">${d.initials}</div>
+            <div><div class="client-name">${d.name}</div></div>
+          </div></td>
+          <td>${d.phone}</td>
+          <td><span class="status-badge badge-${d.status.toLowerCase()}">
+            ${STATUS_TICK[d.status.toLowerCase()] || ''} ${d.status}
+          </span></td>
+          <td class="time-cell">${d.sent_time || '—'}</td>
+          <td class="time-cell">—</td>
+        </tr>
+      `).join('');
+    }
+
+  } catch (err) {
+    console.error('Error fetching latest campaign:', err);
+  }
 }
 
 function bindCampaignEvents() {
@@ -221,6 +298,11 @@ async function performSaveCampaign(status) {
   const audience = allToggle ? CLIENTS.map(c => parseInt(c.id)) : [...selectedClients];
   const button_link = document.getElementById('btn-link').value;
   const schedule_type = document.querySelector('input[name="schedule"]:checked')?.value || 'now';
+  
+  // New fields to match the requested format
+  const is_repeat = document.getElementById('repeat-toggle').checked;
+  const repeat_interval = document.querySelector('input[name="repeat"]:checked')?.value || '24h';
+  const stop_on_reply = true; // Hardcoded true for now based on your image request
 
   try {
     const response = await fetch('api/save_campaign.php', {
@@ -233,7 +315,10 @@ async function performSaveCampaign(status) {
         target_audience: allToggle ? 'All' : 'Selected',
         schedule_type,
         status,
-        client_ids: audience
+        client_ids: audience,
+        is_repeat,
+        repeat_interval,
+        stop_on_reply
       })
     });
     return await response.json();

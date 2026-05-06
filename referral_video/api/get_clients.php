@@ -11,11 +11,18 @@ $stmt->execute();
 $clients = array();
 
 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    // Fetch tags for this client
+    $tag_query = "SELECT t.name FROM tags t JOIN client_tags ct ON t.id = ct.tag_id WHERE ct.client_id = :client_id";
+    $tag_stmt = $conn->prepare($tag_query);
+    $tag_stmt->bindParam(":client_id", $row['id']);
+    $tag_stmt->execute();
+    $row['tags'] = $tag_stmt->fetchAll(PDO::FETCH_COLUMN);
+
     // Generate initials for the frontend
     $words = explode(" ", $row['name']);
     $initials = "";
     foreach ($words as $w) {
-        $initials .= strtoupper($w[0]);
+        if (!empty($w)) $initials .= strtoupper($w[0]);
     }
     $row['initials'] = substr($initials, 0, 2);
     

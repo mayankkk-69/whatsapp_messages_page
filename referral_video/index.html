@@ -48,12 +48,61 @@
       </svg>
       <span class="notif-badge">3</span>
     </button>
+    
+    <!-- NOTIFICATION DROPDOWN -->
+    <div class="notif-dropdown" id="notif-dropdown">
+      <div class="notif-header">
+        <h3>Notifications</h3>
+        <span onclick="document.querySelectorAll('.notif-item').forEach(el=>el.classList.remove('unread')); document.querySelector('.notif-badge').style.display='none';">Mark all read</span>
+      </div>
+      <div class="notif-body" id="notif-body">
+        <div style="padding:30px;text-align:center;color:var(--text-muted);font-size:.875rem;">Loading notifications…</div>
+      </div>
+      <div class="notif-footer">
+        <a href="#analytics" onclick="navigateTo('analytics'); document.getElementById('notif-dropdown').classList.remove('show');">View Activity Logs</a>
+      </div>
+    </div>
     <div class="nav-avatar" id="nav-avatar">
       <img src="https://ui-avatars.com/api/?name=Admin+User&background=25D366&color=fff&size=36" alt="Profile" width="36" height="36"/>
       <div class="avatar-info">
         <span class="avatar-name">Admin User</span>
         <span class="avatar-role">Super Admin</span>
       </div>
+    </div>
+
+    <!-- PROFILE DROPDOWN -->
+    <div class="profile-dropdown" id="profile-dropdown">
+      <div class="profile-dropdown-header">
+        <img src="https://ui-avatars.com/api/?name=Admin+User&background=25D366&color=fff&size=48" alt="Profile" width="48" height="48" style="border-radius:50%;"/>
+        <div>
+          <div style="font-weight:700;font-size:.95rem;">Admin User</div>
+          <div style="font-size:.75rem;color:var(--text-muted);">admin@architectshive.com</div>
+          <span class="profile-role-badge">Super Admin</span>
+        </div>
+      </div>
+      <div class="profile-dropdown-divider"></div>
+      <a class="profile-dropdown-item" onclick="navigateTo('settings'); document.getElementById('profile-dropdown').classList.remove('show');">
+        <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        My Profile
+      </a>
+      <a class="profile-dropdown-item" onclick="navigateTo('settings'); document.getElementById('profile-dropdown').classList.remove('show');">
+        <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="2"/></svg>
+        Settings
+      </a>
+      <a class="profile-dropdown-item" onclick="navigateTo('analytics'); document.getElementById('profile-dropdown').classList.remove('show');">
+        <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><line x1="18" y1="20" x2="18" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="20" x2="12" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="20" x2="6" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Activity Logs
+      </a>
+      <div class="profile-dropdown-divider"></div>
+      <a class="profile-dropdown-item" style="color:#6b7280;">
+        <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Help &amp; Support
+      </a>
+      <div class="profile-dropdown-divider"></div>
+      <a class="profile-dropdown-item profile-logout" onclick="performLogout()">
+        <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Log Out
+      </a>
     </div>
   </div>
 </nav>
@@ -119,5 +168,37 @@
 <script src="js/analytics.js"></script>
 <script src="js/settings.js"></script>
 
+<script>
+  // Session check — redirect to login if not authenticated
+  (async () => {
+    try {
+      const res  = await fetch('api/check_session.php');
+      const data = await res.json();
+      if (!data.loggedIn) {
+        window.location.href = 'login.html';
+        return;
+      }
+      // Populate navbar with real user data
+      if (data.user) {
+        const u = data.user;
+        document.querySelector('.avatar-name').textContent = u.name;
+        document.querySelector('.avatar-role').textContent = u.role;
+        document.querySelectorAll('.profile-dropdown-header div div:first-child').forEach(el => el.textContent = u.name);
+        document.querySelectorAll('.profile-dropdown-header div div:nth-child(2)').forEach(el => el.textContent = u.email);
+        document.querySelector('.profile-role-badge').textContent = u.role;
+        // Update avatar URLs with real name
+        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=25D366&color=fff&size=36`;
+        document.querySelectorAll('.nav-avatar img, .profile-dropdown-header img').forEach(img => img.src = avatarUrl);
+      }
+    } catch(e) { /* allow offline dev */ }
+  })();
+
+  async function performLogout() {
+    try {
+      await fetch('api/logout.php');
+    } catch(e) {}
+    window.location.href = 'login.html';
+  }
+</script>
 </body>
 </html>

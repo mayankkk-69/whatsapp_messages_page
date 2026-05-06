@@ -18,7 +18,10 @@ function initClients() {
 
 function renderClientsTable() {
   const tbody = document.getElementById('clients-tbody');
+  const countEl = document.getElementById('client-count-subtitle');
   if (!tbody) return;
+  
+  if (countEl) countEl.textContent = `${CLIENTS.length} contacts in your list`;
   
   if (CLIENTS.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">No clients found in the database.</td></tr>';
@@ -33,11 +36,16 @@ function buildClientRow(c) {
   const date = c.added_date || 'N/A';
   const campaigns = c.campaign_count || 0;
   
+  const tagsHtml = (c.tags || []).map(t => `<span class="client-tag-mini">${t}</span>`).join('');
+  
   return `
     <tr data-client-id="${c.id}">
       <td><div class="client-cell">
         <div class="client-initials">${c.initials}</div>
-        <div><div class="client-name">${c.name}</div></div>
+        <div>
+          <div class="client-name">${c.name}</div>
+          <div class="client-tags-list">${tagsHtml}</div>
+        </div>
       </div></td>
       <td>${c.phone}</td>
       <td class="time-cell">${date}</td>
@@ -48,16 +56,67 @@ function buildClientRow(c) {
   `;
 }
 
+let clientToDelete = null;
+
 function removeClientRow(id, firstName) {
-  const row = document.querySelector(`tr[data-client-id="${id}"]`);
-  if (row) {
-    row.style.transition = 'opacity .3s, transform .3s';
-    row.style.opacity = '0';
-    row.style.transform = 'translateX(20px)';
-    setTimeout(() => row.remove(), 300);
+  clientToDelete = { id, firstName };
+  const modal = document.getElementById('confirm-delete-modal');
+  const textEl = document.getElementById('confirm-delete-text');
+  if (modal && textEl) {
+    textEl.innerHTML = `Are you sure you want to remove <strong>${firstName}</strong>? This action cannot be undone.`;
+    modal.classList.add('open');
   }
-  showToast(`Contact ${firstName} removed`, 'info');
-  // Note: Actual DB removal would happen here via API
+}
+
+function closeConfirmDeleteModal() {
+  const modal = document.getElementById('confirm-delete-modal');
+  if (modal) modal.classList.remove('open');
+  clientToDelete = null;
+}
+
+async function executeClientDeletion() {
+  if (!clientToDelete) return;
+  const { id, firstName } = clientToDelete;
+  
+  const confirmBtn = document.getElementById('confirm-delete-btn');
+  if (confirmBtn) confirmBtn.textContent = 'Deleting...';
+
+  try {
+    const response = await fetch('api/delete_client.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: id })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      closeConfirmDeleteModal();
+      const row = document.querySelector(`tr[data-client-id="${id}"]`);
+      if (row) {
+        row.style.transition = 'opacity .3s, transform .3s';
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(20px)';
+        setTimeout(() => {
+          row.remove();
+          CLIENTS = CLIENTS.filter(c => c.id != id);
+          const countEl = document.getElementById('client-count-subtitle');
+          if (countEl) countEl.textContent = `${CLIENTS.length} contacts in your list`;
+        }, 300);
+      }
+      showToast(`Contact ${firstName} removed permanently`, 'success');
+      logActivity({ type: 'Client Removed', page: 'clients', data: { name: firstName, id: id } });
+    } else {
+      closeConfirmDeleteModal();
+      showToast('Error: ' + result.message, 'error');
+    }
+  } catch (err) {
+    console.error('Error deleting client:', err);
+    closeConfirmDeleteModal();
+    showToast('Failed to delete client. Check connection.', 'error');
+  } finally {
+    if (confirmBtn) confirmBtn.textContent = 'Delete';
+  }
 }
 
 function bindClientsSearch() {
@@ -134,6 +193,7 @@ async function saveNewClient() {
 
     if (result.id) {
       showToast(`✅ ${name} added successfully!`, 'success');
+      logActivity({ type: 'Client Added', page: 'clients', data: { name: name, phone: phone, tags: tags } });
       // Refresh local data
       await fetchInitialData();
       // Re-render table if on clients page
@@ -157,3 +217,5 @@ window.closeAddClientModal = closeAddClientModal;
 window.toggleTag      = toggleTag;
 window.saveNewClient  = saveNewClient;
 window.removeClientRow = removeClientRow;
+window.closeConfirmDeleteModal = closeConfirmDeleteModal;
+window.executeClientDeletion = executeClientDeletion;
