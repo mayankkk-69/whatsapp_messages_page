@@ -10,6 +10,11 @@ let currentPage = '';
 let selectedClients = new Set();
 let campaignRunning = false;
 
+// API Base URL for Live Server compatibility
+const API_BASE = window.location.port === '5500' 
+  ? 'http://localhost/whatsapp_messages_page/referral_video/api/' 
+  : 'api/';
+
 // ── INIT ──────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   await fetchInitialData();
@@ -58,8 +63,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function fetchInitialData() {
   try {
     const [clientsRes, templatesRes] = await Promise.all([
-      fetch('api/get_clients.php'),
-      fetch('api/get_templates.php')
+      fetch(API_BASE + 'get_clients.php'),
+      fetch(API_BASE + 'get_templates.php')
     ]);
     
     CLIENTS = await clientsRes.json();
@@ -153,7 +158,7 @@ function showToast(msg, type = 'info') {
 
 async function logActivity(details) {
   try {
-    await fetch('api/log_activity.php', {
+    await fetch(API_BASE + 'log_activity.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(details)
@@ -166,7 +171,7 @@ async function logActivity(details) {
 // ── NOTIFICATIONS ─────────────────────────
 async function fetchNotifications() {
   try {
-    const res = await fetch('api/get_notifications.php');
+    const res = await fetch(API_BASE + 'get_notifications.php');
     const notifications = await res.json();
     renderNotifications(notifications);
   } catch (err) { /* silent fail */ }
